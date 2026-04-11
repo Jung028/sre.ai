@@ -1,8 +1,10 @@
-const BASE = "/api/backend";
+// Internal Next.js API routes — try real backend, fall back to mock data automatically
+const BASE = "/api";
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     headers: { "Content-Type": "application/json", ...options?.headers },
+    cache: "no-store",
     ...options,
   });
   if (!res.ok) {
@@ -16,7 +18,7 @@ export const api = {
   incidents: {
     list: (status?: string) =>
       apiFetch<import("./types").Incident[]>(
-        `/incidents${status ? `?status=${status}` : ""}`
+        `/incidents${status && status !== "all" ? `?status=${status}` : ""}`
       ),
     get: (id: string) =>
       apiFetch<import("./types").Incident>(`/incidents/${id}`),

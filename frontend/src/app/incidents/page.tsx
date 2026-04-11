@@ -6,29 +6,44 @@ import { IncidentCard } from "@/components/incidents/IncidentCard";
 import { api } from "@/lib/api";
 import type { Incident } from "@/lib/types";
 
-export default function IncidentsPage() {
-  const [incidents, setIncidents] = useState<Incident[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<string>("all");
+const FILTERS = [
+  { key: "all", label: "All" },
+  { key: "investigating", label: "Investigating" },
+  { key: "needs_pr", label: "Needs PR" },
+  { key: "resolved", label: "Resolved" },
+];
 
-  async function load() {
+export default function IncidentsPage() {
+  const [allIncidents, setAllIncidents] = useState<Incident[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState("all");
+  const [refreshing, setRefreshing] = useState(false);
+
+  async function load(showSpinner = false) {
+    if (showSpinner) setRefreshing(true);
     try {
-      const data = await api.incidents.list(filter === "all" ? undefined : filter);
-      setIncidents(data);
-    } catch (e) {
-      console.error(e);
+      const data = await api.incidents.list();
+      setAllIncidents(data);
+      setError(null);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to load incidents");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }
 
   useEffect(() => {
     load();
-    const interval = setInterval(load, 10000);
+    const interval = setInterval(() => load(), 15000);
     return () => clearInterval(interval);
-  }, [filter]);
+  }, []);
 
-  const FILTERS = ["all", "investigating", "needs_pr", "resolved"];
+  const incidents =
+    filter === "all"
+      ? allIncidents
+      : allIncidents.filter((i) => i.status === filter);
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -41,25 +56,38 @@ export default function IncidentsPage() {
           </span>
         </div>
         <button
-          onClick={load}
-          className="p-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+          onClick={() => load(true)}
+          className={`p-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors ${
+            refreshing ? "animate-spin" : ""
+          }`}
         >
           <RefreshCw size={16} />
         </button>
       </div>
 
+      {error && (
+        <div className="mb-4 px-4 py-3 bg-red-900/20 border border-red-800/40 rounded-lg text-red-400 text-sm">
+          {error}
+        </div>
+      )}
+
       <div className="flex gap-2 mb-5">
-        {FILTERS.map((f) => (
+        {FILTERS.map(({ key, label }) => (
           <button
-            key={f}
-            onClick={() => setFilter(f)}
+            key={key}
+            onClick={() => setFilter(key)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              filter === f
+              filter === key
                 ? "bg-indigo-600 text-white"
                 : "bg-slate-800 text-slate-400 hover:text-white"
             }`}
           >
-            {f.replace("_", " ")}
+            {label}
+            <span className="ml-1.5 text-slate-500">
+              {key === "all"
+                ? allIncidents.length
+                : allIncidents.filter((i) => i.status === key).length}
+            </span>
           </button>
         ))}
       </div>
