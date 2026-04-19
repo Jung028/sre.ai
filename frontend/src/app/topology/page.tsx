@@ -138,7 +138,7 @@ export default function TopologyPage() {
           )}
 
           {/* Edge legend */}
-          <div className="mt-5 p-4 bg-[#17171f] border border-slate-800 rounded-xl">
+          <div className="mt-5 p-4 bg-[var(--bg-surface)] border border-slate-800 rounded-xl">
             <p className="text-xs font-medium text-slate-400 mb-3">Service Dependencies ({edges.length} connections)</p>
             <div className="flex flex-wrap gap-2">
               {edges.map((e, i) => (
@@ -160,7 +160,7 @@ export default function TopologyPage() {
         {/* Detail panel */}
         <div className="w-64 flex-shrink-0">
           {selectedNode ? (
-            <div className="bg-[#17171f] border border-slate-800 rounded-xl p-4 sticky top-4">
+            <div className="bg-[var(--bg-surface)] border border-slate-800 rounded-xl p-4 sticky top-4">
               <div className="flex items-center gap-2 mb-4">
                 {STATUS_STYLES[selectedNode.status]?.icon}
                 <h3 className="text-sm font-semibold text-white">{selectedNode.label}</h3>
@@ -229,7 +229,7 @@ export default function TopologyPage() {
               </div>
             </div>
           ) : (
-            <div className="bg-[#17171f] border border-slate-800 rounded-xl p-4 text-center text-slate-600">
+            <div className="bg-[var(--bg-surface)] border border-slate-800 rounded-xl p-4 text-center text-slate-600">
               <Network size={28} className="mx-auto mb-2 opacity-30" />
               <p className="text-xs">Click a service to see details and connections</p>
             </div>

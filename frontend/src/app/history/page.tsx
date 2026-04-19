@@ -57,7 +57,7 @@ export default function HistoryPage() {
           ))}
         </div>
       ) : (
-        <div className="bg-[#17171f] border border-slate-800 rounded-xl overflow-hidden">
+        <div className="bg-[var(--bg-surface)] border border-slate-800 rounded-xl overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-800">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Clock, ExternalLink, Loader2, Terminal } from "lucide-react";
+import { ArrowLeft, Check, Clock, Copy, ExternalLink, GitFork, Loader2, Terminal } from "lucide-react";
 import Link from "next/link";
 import { SeverityBadge } from "@/components/incidents/SeverityBadge";
 import { RcaPanel } from "@/components/investigation/RcaPanel";
@@ -18,6 +18,24 @@ const STATUS_LABEL: Record<string, { label: string; color: string }> = {
   needs_pr: { label: "Fix Ready", color: "text-purple-400" },
   resolved: { label: "Resolved", color: "text-green-400" },
 };
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={() => {
+        navigator.clipboard.writeText(text).then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1800);
+        });
+      }}
+      className="p-1 rounded text-slate-500 hover:text-slate-200 hover:bg-slate-700 transition-colors"
+      title="Copy"
+    >
+      {copied ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
+    </button>
+  );
+}
 
 export default function IncidentDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -84,12 +102,31 @@ export default function IncidentDetailPage() {
             value: <span className="text-slate-500 font-mono text-xs">{incident.external_id}</span>,
           },
         ].map(({ label, value }) => (
-          <div key={label} className="bg-[#17171f] border border-slate-800 rounded-lg px-3 py-2">
+          <div key={label} className="bg-[var(--bg-surface)] border border-slate-800 rounded-lg px-3 py-2">
             <p className="text-xs text-slate-500 mb-0.5">{label}</p>
             <p className="text-sm text-slate-200">{value}</p>
           </div>
         ))}
       </div>
+
+      {/* Trace ID bar */}
+      {incident.trace_id && (
+        <div className="mb-6 bg-[var(--bg-surface)] border border-slate-800 rounded-lg px-4 py-3 flex items-center gap-3">
+          <GitFork size={14} className="text-indigo-400 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-slate-500 mb-0.5">Trace ID</p>
+            <p className="font-mono text-xs text-slate-300 truncate">{incident.trace_id}</p>
+          </div>
+          <CopyButton text={incident.trace_id} />
+          <Link
+            href={`/traces/${incident.trace_id}`}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 text-indigo-300 text-xs rounded-lg transition-colors"
+          >
+            <GitFork size={12} />
+            View Trace
+          </Link>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-6">
         {/* Left: live stream OR timeline */}
@@ -109,7 +146,7 @@ export default function IncidentDetailPage() {
                 <Clock size={14} className="text-indigo-400" />
                 Incident Timeline
               </h2>
-              <div className="bg-[#0d0d14] border border-slate-800 rounded-xl p-4 space-y-3">
+              <div className="bg-[var(--bg-deep)] border border-slate-800 rounded-xl p-4 space-y-3">
                 {incident.rca.timeline.map((entry, i) => (
                   <div key={i} className="flex gap-3 text-xs">
                     <div className="flex flex-col items-center">
@@ -162,7 +199,7 @@ export default function IncidentDetailPage() {
         {/* Right: RCA summary */}
         <div>
           <h2 className="text-sm font-medium text-slate-300 mb-3">Root Cause Analysis</h2>
-          <div className="bg-[#17171f] border border-slate-800 rounded-xl p-4 min-h-[20rem]">
+          <div className="bg-[var(--bg-surface)] border border-slate-800 rounded-xl p-4 min-h-[20rem]">
             <RcaPanel rca={incident.rca} streamedText={streamedRca} />
           </div>
 

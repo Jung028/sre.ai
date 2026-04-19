@@ -19,7 +19,7 @@ export default function SettingsPage() {
         <h1 className="text-xl font-semibold text-white">Settings & Integrations</h1>
       </div>
 
-      <div className="bg-[#17171f] border border-slate-800 rounded-xl overflow-hidden mb-6">
+      <div className="bg-[var(--bg-surface)] border border-slate-800 rounded-xl overflow-hidden mb-6">
         <div className="px-5 py-4 border-b border-slate-800">
           <h2 className="text-sm font-medium text-slate-200">Integration Status</h2>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -41,7 +41,7 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <div className="bg-[#17171f] border border-slate-800 rounded-xl p-5">
+      <div className="bg-[var(--bg-surface)] border border-slate-800 rounded-xl p-5">
         <h2 className="text-sm font-medium text-slate-200 mb-3">Webhook Endpoints</h2>
         <div className="space-y-2">
           {["pagerduty", "datadog", "grafana"].map((src) => (

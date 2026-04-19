@@ -2,18 +2,98 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Theme variables ──────────────────────────────────────────── */
 :root {
-  --background: #0f0f13;
-  --foreground: #e8e8f0;
+  /* Light mode defaults */
+  --bg-base:    #f0f3fa;
+  --bg-sidebar: #ffffff;
+  --bg-surface: #ffffff;
+  --bg-hover:   #f0f4fb;
+  --bg-deep:    #e8edf8;
+
+  color-scheme: light;
+}
+
+.dark {
+  --bg-base:    #0f0f13;
+  --bg-sidebar: #13131a;
+  --bg-surface: #17171f;
+  --bg-hover:   #1a1a26;
+  --bg-deep:    #0d0d14;
+
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg-base);
   font-family: "Inter", system-ui, sans-serif;
 }
 
+/* ─── Light-mode slate color overrides ─────────────────────────── */
+/* In dark mode we use slate-100..700 for text and slate-800 for    */
+/* backgrounds/borders. In light mode we flip the scale so the UI  */
+/* reads correctly without touching every component's class string. */
+
+html:not(.dark) .text-white       { color: #0f172a; }
+html:not(.dark) .text-slate-100   { color: #0f172a; }
+html:not(.dark) .text-slate-200   { color: #1e293b; }
+html:not(.dark) .text-slate-300   { color: #334155; }
+html:not(.dark) .text-slate-400   { color: #475569; }
+html:not(.dark) .text-slate-500   { color: #64748b; }
+html:not(.dark) .text-slate-600   { color: #94a3b8; }
+html:not(.dark) .text-slate-700   { color: #94a3b8; }
+
+/* Backgrounds */
+html:not(.dark) .bg-slate-800     { background-color: #f1f5f9; }
+html:not(.dark) .bg-slate-900     { background-color: #f8fafc; }
+html:not(.dark) .bg-slate-950     { background-color: #f8fafc; }
+
+/* Opacity variants */
+html:not(.dark) .bg-slate-800\/10 { background-color: rgba(241,245,249,0.10); }
+html:not(.dark) .bg-slate-800\/20 { background-color: rgba(241,245,249,0.80); }
+html:not(.dark) .bg-slate-800\/30 { background-color: rgba(241,245,249,0.60); }
+html:not(.dark) .bg-slate-800\/40 { background-color: rgba(241,245,249,0.50); }
+html:not(.dark) .bg-slate-800\/50 { background-color: rgba(241,245,249,0.90); }
+html:not(.dark) .bg-slate-800\/60 { background-color: #f1f5f9; }
+html:not(.dark) .bg-slate-900\/60 { background-color: rgba(255,255,255,0.90); }
+
+/* Borders */
+html:not(.dark) .border-slate-800      { border-color: #e2e8f0; }
+html:not(.dark) .border-slate-700      { border-color: #cbd5e1; }
+html:not(.dark) .border-slate-600      { border-color: #94a3b8; }
+
+html:not(.dark) .border-slate-800\/50  { border-color: rgba(226,232,240,0.5); }
+html:not(.dark) .border-slate-800\/40  { border-color: rgba(226,232,240,0.4); }
+
+/* Dividers (divide-slate-800) */
+html:not(.dark) .divide-slate-800 > :not([hidden]) ~ :not([hidden]) { border-color: #e2e8f0; }
+
+/* Hover overrides */
+html:not(.dark) .hover\:bg-slate-800:hover { background-color: #f1f5f9; }
+html:not(.dark) .hover\:text-white:hover   { color: #0f172a; }
+
+/* Scrollbar */
+html:not(.dark) .scrollbar-thin { scrollbar-color: #cbd5e1 transparent; }
+
+/* ─── Scrollbar ────────────────────────────────────────────────── */
 .scrollbar-thin {
   scrollbar-width: thin;
   scrollbar-color: #3f3f5a transparent;
+}
+
+/* ─── Trace map: animated dashed error edges ───────────────────── */
+@keyframes dashMove {
+  to { stroke-dashoffset: -18; }
+}
+.animate-dash {
+  animation: dashMove 0.6s linear infinite;
+}
+
+/* ─── Smooth theme transition ──────────────────────────────────── */
+*, *::before, *::after {
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.12s ease;
+}
+/* Don't animate SVG strokes or animations */
+svg *, .animate-spin, .animate-pulse, .animate-dash, .animate-ping {
+  transition: none !important;
 }

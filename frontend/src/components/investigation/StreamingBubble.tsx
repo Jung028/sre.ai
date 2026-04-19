@@ -17,7 +17,7 @@ export function StreamingBubble({ events, status }: Props) {
   }, [events]);
 
   return (
-    <div className="bg-[#0d0d14] border border-slate-800 rounded-xl p-4 h-80 overflow-y-auto scrollbar-thin font-mono text-xs space-y-2">
+    <div className="bg-[var(--bg-deep)] border border-slate-800 rounded-xl p-4 h-80 overflow-y-auto scrollbar-thin font-mono text-xs space-y-2">
       {events.length === 0 && (
         <div className="flex items-center gap-2 text-slate-600">
           <Loader2 size={12} className="animate-spin" />

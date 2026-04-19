@@ -1,5 +1,13 @@
 import type { Incident } from "./types";
 
+export const TRACE_IDS: Record<string, string> = {
+  "inc-001": "4bf92f3577b34da6a3ce929d0e0e4736",
+  "inc-002": "a3c2b1d4e5f6789012345678abcdef01",
+  "inc-003": "7f1e3d2c4b5a6978091234567890abcd",
+  "inc-004": "b2c3d4e5f6a1789056789012345678ab",
+  "inc-005": "9e8d7c6b5a4312f0abcdef0123456789",
+};
+
 export const MOCK_INCIDENTS: Incident[] = [
   {
     id: "inc-001",
@@ -13,6 +21,7 @@ export const MOCK_INCIDENTS: Incident[] = [
     resolved_at: null,
     slack_thread_ts: "1744279500.123456",
     created_at: new Date(Date.now() - 1000 * 60 * 42).toISOString(),
+    trace_id: "4bf92f3577b34da6a3ce929d0e0e4736",
     rca: {
       id: "rca-001",
       incident_id: "inc-001",
@@ -78,6 +87,7 @@ export const MOCK_INCIDENTS: Incident[] = [
     resolved_at: null,
     slack_thread_ts: null,
     created_at: new Date(Date.now() - 1000 * 60 * 8).toISOString(),
+    trace_id: "a3c2b1d4e5f6789012345678abcdef01",
     rca: null,
   },
   {
@@ -92,6 +102,7 @@ export const MOCK_INCIDENTS: Incident[] = [
     resolved_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
     slack_thread_ts: "1744265100.654321",
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
+    trace_id: "7f1e3d2c4b5a6978091234567890abcd",
     rca: {
       id: "rca-003",
       incident_id: "inc-003",
@@ -139,6 +150,7 @@ Reverted the broken template. Queue drained in ~18 minutes after fix.`,
     resolved_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
     slack_thread_ts: "1744190000.111222",
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
+    trace_id: "b2c3d4e5f6a1789056789012345678ab",
     rca: {
       id: "rca-004",
       incident_id: "inc-004",
@@ -187,6 +199,7 @@ Increased readiness probe timeout to 10s. Added memory limit increase from 512Mi
     resolved_at: new Date(Date.now() - 1000 * 60 * 60 * 47).toISOString(),
     slack_thread_ts: null,
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
+    trace_id: "9e8d7c6b5a4312f0abcdef0123456789",
     rca: {
       id: "rca-005",
       incident_id: "inc-005",

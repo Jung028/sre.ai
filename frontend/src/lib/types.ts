@@ -10,6 +10,7 @@ export interface Incident {
   resolved_at: string | null;
   slack_thread_ts: string | null;
   created_at: string;
+  trace_id?: string | null;
   rca?: RCA | null;
 }
 
@@ -56,4 +57,49 @@ export interface TopologyNode {
 export interface TopologyEdge {
   source: string;
   target: string;
+}
+
+export interface TraceSpan {
+  spanId: string;
+  parentSpanId: string | null;
+  service: string;
+  operation: string;
+  startMs: number; // offset from trace start in ms
+  durationMs: number;
+  status: "ok" | "error" | "slow";
+  logs: TraceLog[];
+  tags?: Record<string, string>;
+}
+
+export interface TraceLog {
+  offsetMs: number; // offset from span start
+  level: "info" | "warn" | "error" | "debug";
+  message: string;
+}
+
+export interface TraceNode {
+  id: string;
+  label: string;
+  type: "service" | "database" | "cache" | "queue" | "external";
+  status: "ok" | "error" | "slow";
+  depth: number;
+  indexInDepth: number;
+}
+
+export interface TraceEdge {
+  source: string;
+  target: string;
+  label?: string;
+  status: "ok" | "error" | "slow";
+}
+
+export interface TraceData {
+  traceId: string;
+  incidentId: string;
+  service: string;
+  startTime: string; // ISO
+  durationMs: number;
+  spans: TraceSpan[];
+  nodes: TraceNode[];
+  edges: TraceEdge[];
 }
