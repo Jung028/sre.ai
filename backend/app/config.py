@@ -41,6 +41,10 @@ class Settings(BaseSettings):
     # App
     debug: bool = False
     max_investigation_turns: int = 20
+    api_key: str = ""  # if empty, auth is disabled
+
+    # Topology
+    topology_edges: str = "[]"
 
 
 settings = Settings()
