@@ -112,6 +112,14 @@ export interface TraceEdge {
   target: string;
   label?: string;
   status: "ok" | "error" | "slow";
+  // HTTP connection detail (shown in edge popup)
+  method?: string;
+  headers?: Record<string, string>;
+  requestParams?: Record<string, string>;
+  requestBody?: string;
+  responseStatus?: number;
+  responseBody?: string;
+  latencyMs?: number;
 }
 
 export interface TraceData {

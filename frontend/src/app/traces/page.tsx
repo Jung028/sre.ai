@@ -1,94 +1,101 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { GitFork } from "lucide-react";
-import { api } from "@/lib/api";
-import { TRACE_IDS } from "@/lib/mockData";
-import type { Incident } from "@/lib/types";
-import { formatDistanceToNow } from "@/lib/utils";
-import { SeverityBadge } from "@/components/incidents/SeverityBadge";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { GitFork, Search } from "lucide-react";
 
-export default function TracesIndexPage() {
-  const [incidents, setIncidents] = useState<Incident[]>([]);
-  const [loading, setLoading] = useState(true);
+// Example trace IDs shown as quick links
+const EXAMPLE_TRACES = [
+  { id: "4bf92f3577b34da6a3ce929d0e0e4736", label: "payment-service · DB pool exhausted", status: "error"  },
+  { id: "a3c2b1d4e5f6789012345678abcdef01",  label: "auth-service · slow login (4.3s)",    status: "slow"   },
+  { id: "7f1e3d2c4b5a6978091234567890abcd",  label: "notification-worker · template error", status: "error"  },
+  { id: "b2c3d4e5f6a1789056789012345678ab",  label: "user-service · OOMKilled restart",     status: "error"  },
+  { id: "9e8d7c6b5a4312f0abcdef0123456789",  label: "search-service · wildcard scan 8.2s", status: "slow"   },
+];
 
-  useEffect(() => {
-    api.incidents.list().then(setIncidents).finally(() => setLoading(false));
-  }, []);
+const STATUS_DOT: Record<string, string> = {
+  error: "bg-red-500",
+  slow:  "bg-yellow-400",
+  ok:    "bg-green-400",
+};
 
-  const traced = incidents.filter((i) => i.trace_id);
+export default function TracesPage() {
+  const [traceId, setTraceId] = useState("");
+  const router    = useRouter();
+
+  function navigate(id: string) {
+    const clean = id.trim();
+    if (clean) router.push(`/traces/${clean}`);
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    navigate(traceId);
+  }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <GitFork className="text-indigo-400" size={20} />
-        <h1 className="text-xl font-semibold text-white">Traces</h1>
-        <span className="text-xs bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">{traced.length}</span>
+    <div className="flex flex-col items-center justify-center min-h-[72vh] px-4">
+      {/* Icon + heading */}
+      <div className="flex items-center gap-3 mb-2">
+        <div className="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center">
+          <GitFork size={18} className="text-indigo-400" />
+        </div>
+        <h1 className="text-2xl font-bold text-white tracking-tight">Trace Explorer</h1>
+      </div>
+      <p className="text-sm text-slate-500 mb-8 text-center max-w-xs">
+        Enter a trace ID to inspect distributed service calls, logs, and connection details.
+      </p>
+
+      {/* Search form */}
+      <form onSubmit={handleSubmit} className="w-full max-w-lg">
+        <div className="relative">
+          <Search
+            size={16}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
+          />
+          <input
+            autoFocus
+            type="text"
+            value={traceId}
+            onChange={(e) => setTraceId(e.target.value)}
+            placeholder="Paste trace ID…"
+            className="w-full bg-[var(--bg-surface)] border border-slate-700 rounded-xl pl-11 pr-32 py-3.5 text-sm font-mono text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500/70 focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-lg"
+          />
+          <button
+            type="submit"
+            disabled={!traceId.trim()}
+            className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            Explore →
+          </button>
+        </div>
+      </form>
+
+      {/* Divider */}
+      <div className="flex items-center gap-3 mt-8 mb-4 w-full max-w-lg">
+        <div className="flex-1 border-t border-slate-800" />
+        <span className="text-[11px] text-slate-600 uppercase tracking-wide">Recent traces</span>
+        <div className="flex-1 border-t border-slate-800" />
       </div>
 
-      {loading ? (
-        <div className="space-y-3">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 bg-slate-800/50 rounded-xl animate-pulse" />
-          ))}
-        </div>
-      ) : (
-        <div className="bg-[var(--bg-surface)] border border-slate-800 rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-800">
-                {["Trace ID", "Incident", "Service", "Status", "Time"].map((h) => (
-                  <th key={h} className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {traced.map((inc) => (
-                <tr key={inc.id} className="border-b border-slate-800/50 hover:bg-slate-800/20 transition-colors">
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/traces/${inc.trace_id}`}
-                      className="flex items-center gap-1.5 font-mono text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
-                    >
-                      <GitFork size={11} />
-                      {inc.trace_id?.slice(0, 16)}…
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link href={`/incidents/${inc.id}`} className="flex flex-col gap-0.5 hover:opacity-80 transition-opacity">
-                      <SeverityBadge severity={inc.severity} />
-                      <span className="text-xs text-slate-300 truncate max-w-[200px]">{inc.title}</span>
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3">
-                    <code className="bg-slate-800 px-1.5 py-0.5 rounded text-xs text-slate-300">{inc.service_name ?? "—"}</code>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`text-xs font-medium ${
-                      inc.status === "investigating" ? "text-yellow-400"
-                      : inc.status === "needs_pr" ? "text-purple-400"
-                      : inc.status === "resolved" ? "text-green-400"
-                      : "text-blue-400"
-                    }`}>{inc.status.replace("_", " ")}</span>
-                  </td>
-                  <td className="px-4 py-3 text-xs text-slate-500">{formatDistanceToNow(inc.triggered_at)}</td>
-                </tr>
-              ))}
-              {traced.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-4 py-16 text-center text-slate-600 text-sm">
-                    <GitFork size={32} className="mx-auto mb-3 opacity-20" />
-                    No traces found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {/* Quick-access examples */}
+      <ul className="w-full max-w-lg space-y-1.5">
+        {EXAMPLE_TRACES.map((t) => (
+          <li key={t.id}>
+            <button
+              onClick={() => navigate(t.id)}
+              className="w-full flex items-center gap-3 px-4 py-2.5 bg-[var(--bg-surface)] hover:bg-slate-800/60 border border-slate-800 hover:border-slate-700 rounded-xl transition-all text-left group"
+            >
+              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${STATUS_DOT[t.status]}`} />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-slate-400 group-hover:text-slate-200 transition-colors truncate">{t.label}</p>
+                <p className="text-[10px] font-mono text-slate-600 truncate mt-0.5">{t.id}</p>
+              </div>
+              <GitFork size={12} className="text-slate-700 group-hover:text-indigo-400 transition-colors flex-shrink-0" />
+            </button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

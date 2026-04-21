@@ -1,64 +1,59 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, Clock, GitBranch, GitFork, Moon, Network, Settings, Sun } from "lucide-react";
-import { useTheme } from "./ThemeProvider";
+import { Activity, BookOpen, GitFork, Settings, Zap } from "lucide-react";
 
 const NAV = [
-  { href: "/incidents", label: "Incidents", icon: Activity },
-  { href: "/history", label: "History", icon: Clock },
-  { href: "/topology", label: "Topology", icon: Network },
-  { href: "/traces", label: "Traces", icon: GitFork },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/incidents", label: "Incidents",  icon: Activity  },
+  { href: "/traces",    label: "Trace",      icon: GitFork   },
+  { href: "/runbooks",  label: "Runbooks",   icon: BookOpen  },
+  { href: "/settings",  label: "Settings",   icon: Settings  },
 ];
 
 export function Sidebar() {
   const path = usePathname();
-  const { theme, toggle } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
 
   return (
-    <aside className="w-56 flex-shrink-0 bg-[var(--bg-sidebar)] border-r border-slate-800 flex flex-col">
-      <div className="px-5 py-5 border-b border-slate-800">
-        <div className="flex items-center gap-2">
-          <GitBranch className="text-indigo-400" size={20} />
-          <span className="font-semibold text-lg tracking-tight text-white">sre.ai</span>
+    <aside className="w-56 flex-shrink-0 flex flex-col bg-[var(--bg-sidebar)] border-r border-slate-800/80">
+      {/* Logo */}
+      <div className="px-5 py-5 border-b border-slate-800/80">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center flex-shrink-0">
+            <Zap size={14} className="text-white" />
+          </div>
+          <span className="font-bold text-base tracking-tight text-white">sre.ai</span>
         </div>
-        <p className="text-xs text-slate-500 mt-0.5">AI Site Reliability Engineer</p>
+        <p className="text-[11px] text-slate-600 mt-1.5 pl-0.5">AI Site Reliability Engineer</p>
       </div>
-      <nav className="flex-1 px-3 py-4 space-y-1">
+
+      {/* Nav */}
+      <nav className="flex-1 px-3 py-4 space-y-0.5">
         {NAV.map(({ href, label, icon: Icon }) => {
-          const active = path.startsWith(href);
+          const active = path === href || (href !== "/" && path.startsWith(href));
           return (
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 active
-                  ? "bg-indigo-600/20 text-indigo-300"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                  ? "bg-indigo-600/15 text-indigo-300 border border-indigo-500/20"
+                  : "text-slate-500 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent"
               }`}
             >
-              <Icon size={16} />
+              <Icon size={15} className={active ? "text-indigo-400" : ""} />
               {label}
             </Link>
           );
         })}
       </nav>
-      <div className="px-4 py-3 border-t border-slate-800 flex items-center justify-between">
-        <p className="text-xs text-slate-600">Powered by Claude</p>
-        {mounted && (
-          <button
-            onClick={toggle}
-            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-          </button>
-        )}
+
+      {/* Footer */}
+      <div className="px-5 py-4 border-t border-slate-800/80">
+        <p className="text-[11px] text-slate-700 flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
+          Powered by Claude
+        </p>
       </div>
     </aside>
   );

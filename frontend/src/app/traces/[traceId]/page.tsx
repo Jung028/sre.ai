@@ -6,13 +6,12 @@ import { ArrowLeft, Check, Copy, GitFork, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { TraceMap } from "@/components/trace/TraceMap";
 import { SpanLogPanel } from "@/components/trace/SpanLogPanel";
-import { TraceWaterfall } from "@/components/trace/TraceWaterfall";
 import type { TraceData } from "@/lib/types";
 
 const STATUS_DOT: Record<string, string> = {
-  ok: "bg-green-400",
+  ok:    "bg-green-400",
   error: "bg-red-500",
-  slow: "bg-yellow-400",
+  slow:  "bg-yellow-400",
 };
 
 function CopyButton({ text }: { text: string }) {
@@ -36,11 +35,10 @@ function CopyButton({ text }: { text: string }) {
 
 export default function TracePage() {
   const { traceId } = useParams<{ traceId: string }>();
-  const [trace, setTrace] = useState<TraceData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [trace,          setTrace]          = useState<TraceData | null>(null);
+  const [loading,        setLoading]        = useState(true);
+  const [error,          setError]          = useState<string | null>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [tab, setTab] = useState<"map" | "waterfall">("map");
 
   useEffect(() => {
     fetch(`/api/traces/${traceId}`, { cache: "no-store" })
@@ -55,7 +53,7 @@ export default function TracePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-48 text-slate-500">
+      <div className="flex items-center justify-center h-64 text-slate-500">
         <Loader2 className="animate-spin mr-2" size={18} />
         Loading trace…
       </div>
@@ -64,10 +62,11 @@ export default function TracePage() {
 
   if (error || !trace) {
     return (
-      <div className="text-center py-20 text-slate-500">
-        <p className="text-sm text-red-400">{error ?? "Trace not found."}</p>
-        <Link href="/incidents" className="text-indigo-400 text-sm mt-3 inline-block hover:underline">
-          ← Back to incidents
+      <div className="text-center py-24 text-slate-500">
+        <GitFork size={36} className="mx-auto mb-3 opacity-20" />
+        <p className="text-sm text-red-400 mb-3">{error ?? "Trace not found."}</p>
+        <Link href="/traces" className="text-indigo-400 text-sm hover:underline">
+          ← Back to trace search
         </Link>
       </div>
     );
@@ -82,142 +81,129 @@ export default function TracePage() {
   const errorNode = trace.nodes.find((n) => n.status === "error");
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-5">
-        <Link href="/incidents" className="text-slate-500 hover:text-white transition-colors">
-          <ArrowLeft size={18} />
+    /* Full-height layout — escape parent padding to fill viewport */
+    <div className="flex flex-col -mx-6 -mt-6 lg:-mx-8 lg:-mt-8" style={{ height: "calc(100vh - 0px)", maxHeight: "100vh" }}>
+
+      {/* ── Top bar ── */}
+      <div className="flex items-center gap-3 px-6 lg:px-8 py-3.5 border-b border-slate-800/80 flex-shrink-0 bg-[var(--bg-sidebar)]">
+        <Link href="/traces" className="text-slate-500 hover:text-white transition-colors">
+          <ArrowLeft size={16} />
         </Link>
-        <GitFork className="text-indigo-400" size={18} />
-        <h1 className="text-base font-semibold text-white">Distributed Trace</h1>
+        <GitFork className="text-indigo-400" size={16} />
+        <span className="text-sm font-semibold text-white">Distributed Trace</span>
         <span className={`w-2 h-2 rounded-full ${STATUS_DOT[overallStatus]}`} />
         <span className="text-xs text-slate-500 capitalize">{overallStatus}</span>
-      </div>
 
-      {/* Meta strip */}
-      <div className="grid grid-cols-4 gap-3 mb-5">
-        {[
-          {
-            label: "Trace ID",
-            value: (
-              <div className="flex items-center gap-1">
-                <span className="font-mono text-[11px] text-slate-400 truncate">{traceId}</span>
-                <CopyButton text={traceId} />
-              </div>
-            ),
-          },
-          { label: "Root Service", value: <code className="text-indigo-300 text-xs">{trace.service}</code> },
-          {
-            label: "Duration",
-            value: (
-              <span className={`font-mono text-xs ${overallStatus === "error" ? "text-red-400" : overallStatus === "slow" ? "text-yellow-400" : "text-green-400"}`}>
-                {trace.durationMs >= 1000 ? `${(trace.durationMs / 1000).toFixed(2)}s` : `${trace.durationMs}ms`}
-              </span>
-            ),
-          },
-          {
-            label: "Incident",
-            value: (
-              <Link href={`/incidents/${trace.incidentId}`} className="text-indigo-400 hover:underline text-xs">
+        {/* Meta pills */}
+        <div className="ml-4 flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-slate-500">Root:</span>
+          <code className="text-xs text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded">
+            {trace.service}
+          </code>
+          <span className="text-xs text-slate-600">·</span>
+          <span className={`text-xs font-mono font-semibold ${
+            overallStatus === "error" ? "text-red-400" : overallStatus === "slow" ? "text-yellow-400" : "text-green-400"
+          }`}>
+            {trace.durationMs >= 1000 ? `${(trace.durationMs / 1000).toFixed(2)}s` : `${trace.durationMs}ms`}
+          </span>
+          <span className="text-xs text-slate-600">·</span>
+          <span className="font-mono text-[11px] text-slate-500">{traceId.slice(0, 16)}…</span>
+          <CopyButton text={traceId} />
+          {trace.incidentId && (
+            <>
+              <span className="text-xs text-slate-600">·</span>
+              <Link
+                href={`/incidents/${trace.incidentId}`}
+                className="text-xs text-indigo-400 hover:underline"
+              >
                 {trace.incidentId} →
               </Link>
-            ),
-          },
-        ].map(({ label, value }) => (
-          <div key={label} className="bg-[var(--bg-surface)] border border-slate-800 rounded-lg px-3 py-2">
-            <p className="text-xs text-slate-500 mb-0.5">{label}</p>
-            <div className="text-sm text-slate-200">{value}</div>
-          </div>
-        ))}
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Error callout */}
+      {/* ── Error callout ── */}
       {errorNode && (
-        <div className="mb-4 px-4 py-3 bg-red-900/20 border border-red-800/40 rounded-lg flex items-center gap-2">
+        <div className="mx-6 lg:mx-8 mt-3 px-4 py-2.5 bg-red-900/20 border border-red-800/40 rounded-lg flex items-center gap-2 flex-shrink-0">
           <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
           <p className="text-sm text-red-300">
-            Incident detected at <strong className="text-red-200">{errorNode.label}</strong> — click the node to view error logs
+            Incident detected at <strong className="text-red-200">{errorNode.label}</strong>
+            <span className="text-red-400/70"> — click the node to view logs</span>
           </p>
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="flex gap-2 mb-4">
-        {(["map", "waterfall"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize ${
-              tab === t ? "bg-indigo-600 text-white" : "bg-slate-800 text-slate-400 hover:text-white"
-            }`}
-          >
-            {t === "map" ? "Trace Map" : "Waterfall"}
-          </button>
-        ))}
-      </div>
+      {/* ── Main area: map + log panel ── */}
+      <div className="flex flex-1 overflow-hidden mt-3 px-6 lg:px-8 pb-3 gap-3">
 
-      {/* Main content */}
-      <div className={`flex gap-4 ${selectedNodeId ? "" : ""}`}>
-        {/* Left: map or waterfall */}
-        <div className={`flex-1 min-w-0 bg-[var(--bg-deep)] border border-slate-800 rounded-xl p-4 transition-all`}>
-          {tab === "map" ? (
+        {/* Map — fills remaining space */}
+        <div className="flex-1 min-w-0 bg-[var(--bg-deep)] border border-slate-800 rounded-xl overflow-auto relative">
+          {/* Hint overlay (disappears once something selected) */}
+          {!selectedNodeId && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+              <p className="text-[11px] text-slate-600 bg-[var(--bg-surface)] border border-slate-800 rounded-full px-3 py-1 whitespace-nowrap">
+                Click a node for logs · Click an arrow for connection details
+              </p>
+            </div>
+          )}
+          <div className="p-5">
             <TraceMap
               trace={trace}
               selectedNodeId={selectedNodeId}
               onSelectNode={setSelectedNodeId}
             />
-          ) : (
-            <TraceWaterfall
-              trace={trace}
-              selectedNodeId={selectedNodeId}
-              onSelectNode={setSelectedNodeId}
-            />
-          )}
+          </div>
         </div>
 
-        {/* Right: log panel (visible when node selected) */}
+        {/* Log panel — slides in when node selected */}
         {selectedNodeId && (
-          <div className="w-80 flex-shrink-0 bg-[var(--bg-surface)] border border-slate-800 rounded-xl p-4 max-h-[70vh] overflow-hidden flex flex-col">
-            <SpanLogPanel
-              trace={trace}
-              selectedNodeId={selectedNodeId}
-              onClose={() => setSelectedNodeId(null)}
-            />
+          <div className="w-96 flex-shrink-0 bg-[var(--bg-surface)] border border-slate-800 rounded-xl flex flex-col overflow-hidden">
+            <div className="p-4 flex-1 overflow-hidden flex flex-col">
+              <SpanLogPanel
+                trace={trace}
+                selectedNodeId={selectedNodeId}
+                onClose={() => setSelectedNodeId(null)}
+              />
+            </div>
           </div>
         )}
       </div>
 
-      {/* Service stats footer */}
-      <div className="mt-4 grid grid-cols-3 gap-3">
-        {trace.nodes.map((node) => {
-          const nodeSpans = trace.spans.filter((s) => s.service === node.id);
-          const totalDuration = nodeSpans.reduce((sum, s) => sum + s.durationMs, 0);
-          const style = {
-            error: "border-red-500/30 bg-red-500/5",
-            slow: "border-yellow-500/30 bg-yellow-500/5",
-            ok: "border-slate-800 bg-slate-800/20",
-          }[node.status];
+      {/* ── Service stats bar ── */}
+      <div className="px-6 lg:px-8 pb-4 flex-shrink-0">
+        <div className="grid grid-cols-5 gap-2">
+          {trace.nodes.map((node) => {
+            const nodeSpans    = trace.spans.filter((s) => s.service === node.id);
+            const totalDur     = nodeSpans.reduce((sum, s) => sum + s.durationMs, 0);
+            const isSelected   = selectedNodeId === node.id;
+            const statusBorder = {
+              error: "border-red-500/30 bg-red-500/5",
+              slow:  "border-yellow-500/30 bg-yellow-500/5",
+              ok:    "border-slate-800 bg-slate-800/20",
+            }[node.status];
 
-          return (
-            <button
-              key={node.id}
-              onClick={() => setSelectedNodeId(selectedNodeId === node.id ? null : node.id)}
-              className={`text-left border rounded-lg p-3 transition-all hover:scale-[1.01] ${style} ${
-                selectedNodeId === node.id ? "ring-1 ring-indigo-400" : ""
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-medium text-slate-200">{node.label}</span>
-                <span className={`text-[10px] font-bold uppercase ${
-                  node.status === "error" ? "text-red-400" : node.status === "slow" ? "text-yellow-400" : "text-green-400"
-                }`}>{node.status}</span>
-              </div>
-              <p className="text-[11px] text-slate-500">
-                {nodeSpans.length} span{nodeSpans.length !== 1 ? "s" : ""} · {totalDuration}ms total
-              </p>
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={node.id}
+                onClick={() => setSelectedNodeId(isSelected ? null : node.id)}
+                className={`text-left border rounded-lg p-2.5 transition-all hover:scale-[1.01] ${statusBorder} ${
+                  isSelected ? "ring-1 ring-indigo-400" : ""
+                }`}
+              >
+                <div className="flex items-center justify-between mb-0.5">
+                  <span className="text-xs font-medium text-slate-200 truncate pr-1">{node.label}</span>
+                  <span className={`text-[10px] font-bold uppercase flex-shrink-0 ${
+                    node.status === "error" ? "text-red-400" : node.status === "slow" ? "text-yellow-400" : "text-green-400"
+                  }`}>{node.status}</span>
+                </div>
+                <p className="text-[10px] text-slate-500">
+                  {nodeSpans.length} span{nodeSpans.length !== 1 ? "s" : ""} · {totalDur}ms
+                </p>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
