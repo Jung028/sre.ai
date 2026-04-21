@@ -29,6 +29,7 @@ class RCAOut(BaseModel):
     timeline: list[dict[str, Any]]
     recommended_actions: list[dict[str, Any]]
     needs_pr: bool
+    code_context: dict | None = None
     github_pr_url: str | None
     model_used: str
     generated_at: datetime

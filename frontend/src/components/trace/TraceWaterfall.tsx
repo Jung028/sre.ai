@@ -30,7 +30,7 @@ interface Props {
 
 export function TraceWaterfall({ trace, selectedNodeId, onSelectNode }: Props) {
   const totalMs = trace.durationMs;
-  const services = [...new Set(trace.spans.map((s) => s.service))];
+  const services = Array.from(new Set(trace.spans.map((s) => s.service)));
   const colorMap: Record<string, string> = {};
   services.forEach((s, i) => { colorMap[s] = SERVICE_COLORS[i % SERVICE_COLORS.length]; });
 

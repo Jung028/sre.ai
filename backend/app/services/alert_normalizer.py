@@ -42,11 +42,11 @@ def normalize_pagerduty(event: dict) -> NormalizedAlert:
         external_id=data.get("id", ""),
         title=data.get("title", data.get("summary", "PagerDuty Incident")),
         severity=_parse_severity(data.get("severity", data.get("urgency", "high"))),
-        service_name=service.get("summary") if isinstance(service, dict) else None,
+        service_name=service.get("summary") or service.get("name") if isinstance(service, dict) else None,
         description=body.get("details", "") if isinstance(body, dict) else str(body),
         labels={
             "priority": data.get("priority", {}).get("summary", "") if isinstance(data.get("priority"), dict) else "",
-            "type": event.get("event_type", ""),
+            "type": event.get("event", event.get("event_type", "")),
         },
         fired_at=_parse_dt(data.get("created_at")),
         runbook_url=None,

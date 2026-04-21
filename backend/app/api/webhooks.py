@@ -66,9 +66,14 @@ def _alert_to_dict(alert: NormalizedAlert) -> dict:
     }
 
 
-def _enqueue_investigation(incident_id: str):
-    from app.workers.tasks import investigate_alert_task
-    investigate_alert_task.delay(incident_id)
+async def _enqueue_investigation(incident_id: str):
+    """
+    Run the investigation directly as a FastAPI background task.
+    No Celery worker required for local dev — the coroutine runs in the
+    same event loop as FastAPI, publishing SSE events to Redis pub/sub.
+    """
+    from app.workers.tasks import _run_investigation
+    await _run_investigation(incident_id)
 
 
 @router.post("/pagerduty")
@@ -90,10 +95,10 @@ async def pagerduty_webhook(
     incident_ids = []
 
     for msg in payload.get("messages", [payload]):
-        event = msg.get("event", msg)
-        if event.get("event_type", "") not in ("incident.triggered", "incident.acknowledged", ""):
+        event_type = msg.get("event", "")  # string e.g. "incident.triggered"
+        if event_type not in ("incident.triggered", "incident.acknowledged", ""):
             continue
-        alert = normalize_pagerduty(event)
+        alert = normalize_pagerduty(msg)
         incident = await _create_incident(db, alert)
         incident_ids.append(incident.id)
 

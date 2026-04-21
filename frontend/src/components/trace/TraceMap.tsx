@@ -31,7 +31,7 @@ const EDGE_STATUS_COLOR = {
 };
 
 function computeLayout(nodes: TraceNode[]) {
-  const depths = [...new Set(nodes.map((n) => n.depth))].sort((a, b) => a - b);
+  const depths = Array.from(new Set(nodes.map((n) => n.depth))).sort((a, b) => a - b);
   const maxInDepth = Math.max(...depths.map((d) => nodes.filter((n) => n.depth === d).length));
   const totalH = (maxInDepth - 1) * V_STEP + NODE_H + PAD_Y * 2;
 

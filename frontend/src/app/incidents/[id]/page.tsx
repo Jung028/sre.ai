@@ -2,9 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Check, Clock, Copy, ExternalLink, GitFork, Loader2, Terminal } from "lucide-react";
 import Link from "next/link";
+import {
+  ArrowLeft,
+  Check,
+  Clock,
+  Copy,
+  ExternalLink,
+  GitFork,
+  Loader2,
+  Terminal,
+} from "lucide-react";
 import { SeverityBadge } from "@/components/incidents/SeverityBadge";
+import { RcaDetailView } from "@/components/investigation/RcaDetailView";
 import { RcaPanel } from "@/components/investigation/RcaPanel";
 import { StreamingBubble } from "@/components/investigation/StreamingBubble";
 import { useIncidentStream } from "@/lib/useIncidentStream";
@@ -12,106 +22,110 @@ import { api } from "@/lib/api";
 import type { Incident } from "@/lib/types";
 import { formatDistanceToNow } from "@/lib/utils";
 
-const STATUS_LABEL: Record<string, { label: string; color: string }> = {
-  investigating: { label: "Investigating", color: "text-yellow-400" },
-  investigated: { label: "Investigated", color: "text-blue-400" },
-  needs_pr: { label: "Fix Ready", color: "text-purple-400" },
-  resolved: { label: "Resolved", color: "text-green-400" },
+// ─── Status pill ──────────────────────────────────────────────────────────────
+const STATUS: Record<string, { label: string; dot: string; text: string }> = {
+  investigating: { label: "Investigating",  dot: "bg-yellow-400 animate-pulse", text: "text-yellow-400" },
+  investigated:  { label: "Investigated",   dot: "bg-blue-400",                 text: "text-blue-400"   },
+  needs_pr:      { label: "Fix Ready",      dot: "bg-purple-400",               text: "text-purple-400" },
+  resolved:      { label: "Resolved",       dot: "bg-green-400",                text: "text-green-400"  },
 };
 
+function StatusPill({ status }: { status: string }) {
+  const s = STATUS[status] ?? { label: status, dot: "bg-slate-400", text: "text-slate-400" };
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${s.text}`}>
+      <span className={`w-2 h-2 rounded-full ${s.dot}`} />
+      {s.label}
+    </span>
+  );
+}
+
+// ─── Copy button ──────────────────────────────────────────────────────────────
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <button
-      onClick={() => {
-        navigator.clipboard.writeText(text).then(() => {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1800);
-        });
-      }}
+      onClick={() => navigator.clipboard.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800); })}
       className="p-1 rounded text-slate-500 hover:text-slate-200 hover:bg-slate-700 transition-colors"
-      title="Copy"
     >
       {copied ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
     </button>
   );
 }
 
+// ─── Main page ────────────────────────────────────────────────────────────────
 export default function IncidentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [incident, setIncident] = useState<Incident | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState<string | null>(null);
 
   const isLive = incident?.status === "investigating";
   const { events, rca: streamedRca, status: streamStatus } = useIncidentStream(isLive ? id : null);
 
   useEffect(() => {
-    api.incidents
-      .get(id)
-      .then((data) => {
-        setIncident(data);
-        setError(null);
-      })
+    api.incidents.get(id)
+      .then((data) => { setIncident(data); setError(null); })
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load"))
       .finally(() => setLoading(false));
   }, [id]);
 
+  // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-48 text-slate-500">
+      <div className="flex items-center justify-center h-64 text-slate-500">
         <Loader2 className="animate-spin mr-2" size={18} />
-        Loading incident...
+        Loading incident…
       </div>
     );
   }
 
+  // ── Error ──────────────────────────────────────────────────────────────────
   if (error || !incident) {
     return (
-      <div className="text-center py-20 text-slate-500">
-        <p className="text-sm text-red-400">{error ?? "Incident not found."}</p>
-        <Link href="/incidents" className="text-indigo-400 text-sm mt-3 inline-block hover:underline">
-          ← Back to incidents
-        </Link>
+      <div className="text-center py-24 text-slate-500">
+        <p className="text-sm text-red-400 mb-3">{error ?? "Incident not found."}</p>
+        <Link href="/incidents" className="text-indigo-400 text-sm hover:underline">← Back to incidents</Link>
       </div>
     );
   }
 
-  const statusInfo = STATUS_LABEL[incident.status] ?? { label: incident.status, color: "text-slate-400" };
+  const hasRca = !!incident.rca;
+  // v2-rca-detail-view
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <Link href="/incidents" className="text-slate-500 hover:text-white transition-colors">
+    <div className="max-w-5xl mx-auto space-y-6">
+
+      {/* ── Page header ─────────────────────────────────────────────────── */}
+      <div className="flex items-center gap-3">
+        <Link href="/incidents" className="text-slate-500 hover:text-white transition-colors flex-shrink-0">
           <ArrowLeft size={18} />
         </Link>
         <SeverityBadge severity={incident.severity} />
-        <h1 className="text-base font-semibold text-white truncate flex-1">{incident.title}</h1>
-        <span className={`text-xs font-medium ${statusInfo.color}`}>{statusInfo.label}</span>
+        <h1 className="text-base font-semibold text-white leading-snug flex-1 min-w-0 truncate">
+          {incident.title}
+        </h1>
+        <StatusPill status={incident.status} />
       </div>
 
-      {/* Meta strip */}
-      <div className="grid grid-cols-4 gap-3 mb-6">
+      {/* ── Meta strip ──────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-4 gap-3">
         {[
-          { label: "Service", value: <code className="text-indigo-300">{incident.service_name ?? "unknown"}</code> },
-          { label: "Source", value: incident.source },
+          { label: "Service",   value: <code className="text-indigo-300 text-xs">{incident.service_name ?? "unknown"}</code> },
+          { label: "Source",    value: <span className="capitalize">{incident.source}</span> },
           { label: "Triggered", value: formatDistanceToNow(incident.triggered_at) },
-          {
-            label: "ID",
-            value: <span className="text-slate-500 font-mono text-xs">{incident.external_id}</span>,
-          },
+          { label: "ID",        value: <span className="font-mono text-slate-500 text-xs">{incident.external_id}</span> },
         ].map(({ label, value }) => (
-          <div key={label} className="bg-[var(--bg-surface)] border border-slate-800 rounded-lg px-3 py-2">
+          <div key={label} className="bg-[var(--bg-surface)] border border-slate-800 rounded-xl px-4 py-2.5">
             <p className="text-xs text-slate-500 mb-0.5">{label}</p>
             <p className="text-sm text-slate-200">{value}</p>
           </div>
         ))}
       </div>
 
-      {/* Trace ID bar */}
+      {/* ── Trace ID bar ────────────────────────────────────────────────── */}
       {incident.trace_id && (
-        <div className="mb-6 bg-[var(--bg-surface)] border border-slate-800 rounded-lg px-4 py-3 flex items-center gap-3">
+        <div className="bg-[var(--bg-surface)] border border-slate-800 rounded-xl px-4 py-3 flex items-center gap-3">
           <GitFork size={14} className="text-indigo-400 flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-xs text-slate-500 mb-0.5">Trace ID</p>
@@ -122,100 +136,47 @@ export default function IncidentDetailPage() {
             href={`/traces/${incident.trace_id}`}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 text-indigo-300 text-xs rounded-lg transition-colors"
           >
-            <GitFork size={12} />
+            <ExternalLink size={12} />
             View Trace
           </Link>
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-6">
-        {/* Left: live stream OR timeline */}
+      {/* ── Live investigation stream (when actively running) ────────────── */}
+      {isLive && (
         <div>
-          {isLive ? (
-            <>
-              <h2 className="text-sm font-medium text-slate-300 mb-3 flex items-center gap-2">
-                <Terminal size={14} className="text-yellow-400" />
-                Live Investigation
-                <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
-              </h2>
-              <StreamingBubble events={events} status={streamStatus} />
-            </>
-          ) : incident.rca?.timeline && incident.rca.timeline.length > 0 ? (
-            <>
-              <h2 className="text-sm font-medium text-slate-300 mb-3 flex items-center gap-2">
-                <Clock size={14} className="text-indigo-400" />
-                Incident Timeline
-              </h2>
-              <div className="bg-[var(--bg-deep)] border border-slate-800 rounded-xl p-4 space-y-3">
-                {incident.rca.timeline.map((entry, i) => (
-                  <div key={i} className="flex gap-3 text-xs">
-                    <div className="flex flex-col items-center">
-                      <div className="w-2 h-2 rounded-full bg-indigo-500 mt-0.5 flex-shrink-0" />
-                      {i < (incident.rca?.timeline.length ?? 0) - 1 && (
-                        <div className="w-px flex-1 bg-slate-800 mt-1" />
-                      )}
-                    </div>
-                    <div className="pb-3">
-                      <p className="text-slate-500 font-mono mb-0.5">
-                        {new Date(entry.ts).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-                      </p>
-                      <p className="text-slate-300">{entry.event}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          <h2 className="text-sm font-medium text-slate-300 mb-3 flex items-center gap-2">
+            <Terminal size={14} className="text-yellow-400" />
+            Live Investigation
+            <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+          </h2>
+          <StreamingBubble events={events} status={streamStatus} />
 
-              {/* Recommended actions */}
-              {incident.rca?.recommended_actions && incident.rca.recommended_actions.length > 0 && (
-                <div className="mt-4">
-                  <h2 className="text-sm font-medium text-slate-300 mb-3">Recommended Actions</h2>
-                  <div className="space-y-2">
-                    {incident.rca.recommended_actions.map((action, i) => {
-                      const colors: Record<string, string> = {
-                        immediate: "border-red-500/30 bg-red-500/5 text-red-400",
-                        short_term: "border-yellow-500/30 bg-yellow-500/5 text-yellow-400",
-                        long_term: "border-blue-500/30 bg-blue-500/5 text-blue-400",
-                      };
-                      return (
-                        <div key={i} className={`border rounded-lg p-3 ${colors[action.priority] ?? "border-slate-700 bg-slate-800/20 text-slate-400"}`}>
-                          <p className="text-xs font-semibold uppercase tracking-wide mb-1 opacity-70">{action.priority.replace("_", " ")}</p>
-                          <p className="text-xs text-slate-200">{action.action}</p>
-                          {action.rationale && <p className="text-xs opacity-60 mt-1">{action.rationale}</p>}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </>
-          ) : (
-            <>
-              <h2 className="text-sm font-medium text-slate-300 mb-3">Investigation Log</h2>
-              <StreamingBubble events={[]} status="idle" />
-            </>
+          {/* Streaming RCA as it arrives */}
+          {streamedRca && (
+            <div className="mt-4 bg-[var(--bg-surface)] border border-slate-800 rounded-xl p-4">
+              <RcaPanel rca={null} streamedText={streamedRca} />
+            </div>
           )}
         </div>
+      )}
 
-        {/* Right: RCA summary */}
-        <div>
-          <h2 className="text-sm font-medium text-slate-300 mb-3">Root Cause Analysis</h2>
-          <div className="bg-[var(--bg-surface)] border border-slate-800 rounded-xl p-4 min-h-[20rem]">
-            <RcaPanel rca={incident.rca} streamedText={streamedRca} />
-          </div>
+      {/* ── Full RCA detail (once investigation is done) ─────────────────── */}
+      {!isLive && hasRca && (
+        <RcaDetailView
+          rca={incident.rca!}
+          triggeredAt={incident.triggered_at}
+          serviceName={incident.service_name}
+        />
+      )}
 
-          {incident.rca?.github_pr_url && (
-            <a
-              href={incident.rca.github_pr_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors w-full justify-center"
-            >
-              <ExternalLink size={14} />
-              View Fix PR on GitHub
-            </a>
-          )}
+      {/* ── No RCA yet ───────────────────────────────────────────────────── */}
+      {!isLive && !hasRca && (
+        <div className="flex items-center gap-3 px-4 py-6 rounded-xl border border-slate-800 bg-slate-900/40">
+          <Clock size={16} className="text-slate-600" />
+          <p className="text-sm text-slate-500">Investigation hasn't run yet — trigger it via a webhook or the API.</p>
         </div>
-      </div>
+      )}
     </div>
   );
 }

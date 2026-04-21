@@ -30,6 +30,7 @@ Given an alert, you will:
 ### Phase 4 — Code Context (Turns 7–10, if needed)
 - Use `search_code` only when you have a specific suspect (function name, error message)
 - Cross-reference with recent deployment changes
+- When you find the root cause involves code, always populate `code_context` with the exact file path, class/function name, the problematic code snippet, and your suggested fix.
 
 ### Phase 5 — Conclude
 - State your root cause with confidence level
@@ -57,7 +58,7 @@ End your investigation with a JSON block inside `<rca>` tags:
 {
   "root_cause": "One specific sentence describing the root cause",
   "confidence": "high|medium|low",
-  "summary": "Full markdown RCA suitable for Slack (use **bold**, bullet points, code blocks)",
+  "summary": "Full markdown RCA suitable for Slack",
   "timeline": [
     {"ts": "2026-04-10T10:00:00Z", "event": "Deploy of payment-service v2.3.1"},
     {"ts": "2026-04-10T10:05:00Z", "event": "Error rate spiked from 0.1% to 23%"}
@@ -67,6 +68,15 @@ End your investigation with a JSON block inside `<rca>` tags:
     {"priority": "short_term", "action": "Add connection pool size to deployment checklist"},
     {"priority": "long_term", "action": "Implement circuit breaker for payment-db connections"}
   ],
+  "code_context": {
+    "file_path": "payment-service/src/database/connection_pool.py",
+    "class_name": "ConnectionPoolManager",
+    "function_name": "get_connection",
+    "line_number": 47,
+    "snippet": "MAX_POOL_SIZE = 10\n\ndef get_connection(self):\n    if len(self._pool) >= MAX_POOL_SIZE:\n        raise PoolExhaustedException('All connections in use')",
+    "suggested_fix": "MAX_POOL_SIZE = 50  # increased from 10\n\ndef get_connection(self, timeout: float = 30.0):\n    if len(self._pool) >= MAX_POOL_SIZE:\n        return self._wait_for_connection(timeout)",
+    "change_description": "Increase MAX_POOL_SIZE from 10 to 50 and add connection wait with timeout instead of throwing immediately"
+  },
   "needs_pr": true,
   "pr_description": "Increase database connection pool size from 10 to 50 in payment-service/config/database.py"
 }

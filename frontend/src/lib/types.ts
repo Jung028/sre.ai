@@ -14,6 +14,24 @@ export interface Incident {
   rca?: RCA | null;
 }
 
+export interface CodeContext {
+  file_path: string;
+  class_name?: string;
+  function_name?: string;
+  line_number?: number;
+  snippet: string;
+  suggested_fix: string;
+  change_description: string;
+}
+
+export interface Evidence {
+  type: "metric" | "log" | "deploy" | "code" | "trace";
+  label: string;
+  value: string;
+  detail?: string;
+  delta?: string; // e.g. "0.1% → 23%"
+}
+
 export interface RCA {
   id: string;
   incident_id: string;
@@ -23,9 +41,12 @@ export interface RCA {
   timeline: TimelineEntry[];
   recommended_actions: Action[];
   needs_pr: boolean;
+  pr_description?: string | null;
   github_pr_url: string | null;
   model_used: string;
   generated_at: string;
+  code_context?: CodeContext | null;
+  evidence?: Evidence[];
 }
 
 export interface TimelineEntry {

@@ -7,6 +7,9 @@ from app.api.health import router as health_router
 from app.api.incidents import router as incidents_router
 from app.api.investigations import router as investigations_router
 from app.api.runbooks import router as runbooks_router
+from app.api.discord_events import router as discord_events_router
+from app.api.github_webhook import router as github_webhook_router
+from app.api.slack_events import router as slack_events_router
 from app.api.topology import router as topology_router
 from app.api.traces import router as traces_router
 from app.api.webhooks import router as webhooks_router
@@ -43,6 +46,15 @@ app.include_router(health_router)
 
 # Webhooks — HMAC auth handled internally, no API key required
 app.include_router(webhooks_router, prefix="/api")
+
+# Slack Events — Slack signing secret auth handled internally, no API key required
+app.include_router(slack_events_router, prefix="/api")
+
+# Discord Interactions — Ed25519 auth handled internally, no API key required
+app.include_router(discord_events_router)
+
+# GitHub Webhooks — HMAC-SHA256 auth handled internally, no API key required
+app.include_router(github_webhook_router)
 
 # Protected routes — require API key when settings.api_key is set
 app.include_router(

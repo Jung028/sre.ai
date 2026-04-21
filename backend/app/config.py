@@ -4,9 +4,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    # Anthropic
-    anthropic_api_key: str = ""
-    anthropic_model: str = "claude-sonnet-4-6"
+    # Groq
+    groq_api_key: str = ""
+    groq_model: str = "llama-3.3-70b-versatile"
 
     # Database
     database_url: str = "postgresql+asyncpg://sreai:localdev@localhost:5432/sreai"
@@ -24,6 +24,12 @@ class Settings(BaseSettings):
     # GitHub
     github_token: str = ""
     github_repo: str = ""  # owner/repo
+    github_webhook_secret: str = ""  # for verifying PR/push webhook payloads
+
+    # Discord
+    discord_bot_token: str = ""
+    discord_application_id: str = ""
+    discord_public_key: str = ""  # Ed25519 public key for request verification
 
     # PagerDuty
     pagerduty_webhook_secret: str = ""

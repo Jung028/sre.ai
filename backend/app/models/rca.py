@@ -29,6 +29,7 @@ class RCA(Base):
     recommended_actions: Mapped[list] = mapped_column(JSONB, default=list)
     needs_pr: Mapped[bool] = mapped_column(Boolean, default=False)
     pr_description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    code_context: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     github_pr_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     model_used: Mapped[str] = mapped_column(String(100))
     raw_messages: Mapped[list] = mapped_column(JSONB, default=list)  # full Claude conversation

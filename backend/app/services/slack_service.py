@@ -91,6 +91,36 @@ class SlackService:
                 }
             )
 
+        code = getattr(rca, "code_context", None) or {}
+        if code and code.get("snippet"):
+            blocks.append({"type": "divider"})
+            blocks.append({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": (
+                        f":file_folder: *{code.get('file_path', 'unknown')}*"
+                        + (f"  ·  `{code.get('class_name', '')}.{code.get('function_name', '')}` line {code.get('line_number', '?')}" if code.get('class_name') else "")
+                    ),
+                },
+            })
+            snippet = code.get("snippet", "")[:800]
+            blocks.append({
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": f"*Problematic code:*\n```{snippet}```"},
+            })
+            if code.get("suggested_fix"):
+                fix = code["suggested_fix"][:800]
+                blocks.append({
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": f"*Suggested fix:*\n```{fix}```"},
+                })
+            if code.get("change_description"):
+                blocks.append({
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": f":bulb: {code['change_description']}"},
+                })
+
         if rca.github_pr_url:
             blocks.append(
                 {
