@@ -128,7 +128,7 @@ function EvidenceRail({ evidence }: { evidence: Evidence[] }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Timeline
 // ─────────────────────────────────────────────────────────────────────────────
-const TIMELINE_EVENT_STYLE = (event: string): { dot: string; icon?: string } => {
+const TIMELINE_EVENT_STYLE = (event: string): { dot: string } => {
   const e = event.toLowerCase();
   if (e.includes("deploy") || e.includes("rolled"))
     return { dot: "bg-indigo-500 ring-indigo-500/30" };
@@ -173,7 +173,7 @@ function Timeline({ entries }: { entries: RCA["timeline"] }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Code context — 3-tab (reused logic from RcaPanel)
+// Code context — 3-tab viewer
 // ─────────────────────────────────────────────────────────────────────────────
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -354,10 +354,10 @@ function CodeContextCard({ ctx }: { ctx: CodeContext }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Recommended Actions
 // ─────────────────────────────────────────────────────────────────────────────
-const ACTION_STYLES: Record<string, { bar: string; badge: string; text: string; label: string }> = {
-  immediate:  { bar: "bg-red-500",    badge: "bg-red-500/10 text-red-400 border-red-500/30",    text: "text-red-400",    label: "Immediate" },
-  short_term: { bar: "bg-yellow-500", badge: "bg-yellow-500/10 text-yellow-400 border-yellow-500/30", text: "text-yellow-400", label: "Short Term" },
-  long_term:  { bar: "bg-blue-500",   badge: "bg-blue-500/10 text-blue-400 border-blue-500/30",   text: "text-blue-400",   label: "Long Term" },
+const ACTION_STYLES: Record<string, { bar: string; badge: string; label: string }> = {
+  immediate:  { bar: "bg-red-500",    badge: "bg-red-500/10 text-red-400 border-red-500/30",    label: "Immediate" },
+  short_term: { bar: "bg-yellow-500", badge: "bg-yellow-500/10 text-yellow-400 border-yellow-500/30", label: "Short Term" },
+  long_term:  { bar: "bg-blue-500",   badge: "bg-blue-500/10 text-blue-400 border-blue-500/30",   label: "Long Term" },
 };
 
 function ActionsPanel({ actions }: { actions: RCA["recommended_actions"] }) {
@@ -387,7 +387,7 @@ function ActionsPanel({ actions }: { actions: RCA["recommended_actions"] }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MTTR badge — time from triggered_at to generated_at
+// MTTR badge
 // ─────────────────────────────────────────────────────────────────────────────
 function MttrBadge({ triggeredAt, generatedAt }: { triggeredAt: string; generatedAt: string }) {
   const diffMs = new Date(generatedAt).getTime() - new Date(triggeredAt).getTime();

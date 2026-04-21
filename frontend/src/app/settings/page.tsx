@@ -33,7 +33,7 @@ export default function SettingsPage() {
                 <p className="text-sm text-slate-200">{i.name}</p>
                 <p className="text-xs text-slate-500">{i.desc}</p>
               </div>
-              <code className="text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded">
+              <code className="text-xs text-indigo-300 bg-slate-800/80 border border-slate-700 px-2 py-1 rounded font-mono">
                 {i.env}
               </code>
             </div>

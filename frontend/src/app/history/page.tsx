@@ -96,7 +96,7 @@ export default function HistoryPage() {
                   <td className="px-4 py-3 text-slate-300 text-xs max-w-[260px]">
                     <span className="line-clamp-2 leading-relaxed">
                       {inc.rca?.root_cause ?? (
-                        <span className="text-slate-600 italic">No RCA yet</span>
+                        <span className="text-slate-500 italic">No RCA yet</span>
                       )}
                     </span>
                   </td>
@@ -106,10 +106,10 @@ export default function HistoryPage() {
                         ● {inc.rca.confidence}
                       </span>
                     ) : (
-                      <span className="text-slate-700 text-xs">—</span>
+                      <span className="text-slate-600 text-xs">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
+                  <td className="px-4 py-3 text-slate-400 text-xs whitespace-nowrap">
                     {formatDistanceToNow(inc.triggered_at)}
                   </td>
                   <td className="px-4 py-3">
@@ -125,7 +125,7 @@ export default function HistoryPage() {
                         PR
                       </a>
                     ) : (
-                      <span className="text-slate-700 text-xs">—</span>
+                      <span className="text-slate-600 text-xs">—</span>
                     )}
                   </td>
                 </tr>

@@ -55,7 +55,7 @@ export function IncidentCard({ incident }: { incident: Incident }) {
   return (
     <div
       onClick={() => router.push(`/incidents/${incident.id}`)}
-      className="block bg-[var(--bg-surface)] border border-slate-800 rounded-xl p-4 hover:border-indigo-500/40 hover:bg-[var(--bg-hover)] transition-all cursor-pointer"
+      className="block bg-[var(--bg-surface)] border border-slate-800/80 rounded-xl p-4 hover:border-indigo-500/30 hover:bg-slate-800/40 transition-all cursor-pointer group"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
@@ -63,10 +63,10 @@ export function IncidentCard({ incident }: { incident: Incident }) {
             <SeverityBadge severity={incident.severity} />
             <span className="text-xs text-slate-500">{incident.source}</span>
           </div>
-          <h3 className="text-sm font-medium text-slate-100 truncate">{incident.title}</h3>
+          <h3 className="text-sm font-medium text-slate-100 group-hover:text-white truncate transition-colors">{incident.title}</h3>
           {incident.service_name && (
             <p className="text-xs text-slate-500 mt-0.5">
-              Service: <code className="text-slate-400">{incident.service_name}</code>
+              Service: <code className="text-indigo-400/80 font-mono">{incident.service_name}</code>
             </p>
           )}
           {incident.trace_id && <TraceIdBadge traceId={incident.trace_id} />}

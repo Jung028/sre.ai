@@ -14,6 +14,7 @@ from app.core.signatures import (
 )
 from app.database import get_db
 from app.models.incident import Alert, Incident
+from app.services.alert_correlator import AlertCorrelator
 from app.services.alert_normalizer import (
     NormalizedAlert,
     normalize_datadog,
@@ -52,6 +53,49 @@ async def _create_incident(db: AsyncSession, alert: NormalizedAlert) -> Incident
     return incident
 
 
+async def _get_or_create_incident(
+    db: AsyncSession,
+    alert: NormalizedAlert,
+) -> tuple[Incident, bool]:
+    """
+    Correlate the alert against recent open incidents.
+    If correlation score >= threshold, attach this alert to the existing incident
+    and return (existing_incident, False) — no new investigation needed.
+    Otherwise create a new incident and return (new_incident, True).
+    """
+    correlator = AlertCorrelator(db)
+    match = await correlator.find_correlated(
+        title=alert.title,
+        service_name=alert.service_name,
+        fired_at=alert.fired_at,
+    )
+
+    if match is not None:
+        existing_incident, score = match
+        # Attach this alert to the existing incident as a correlated alert
+        db_alert = Alert(
+            id=str(uuid.uuid4()),
+            incident_id=existing_incident.id,
+            source=alert.source,
+            title=alert.title,
+            description=alert.description,
+            labels={
+                **alert.labels,
+                "_correlated": "true",
+                "_correlation_score": str(round(score, 3)),
+                "_correlation_strength": correlator.summarize_correlation(score),
+            },
+            fired_at=alert.fired_at,
+        )
+        db.add(db_alert)
+        await db.flush()
+        return existing_incident, False
+
+    # No correlation found — create a new incident
+    incident = await _create_incident(db, alert)
+    return incident, True
+
+
 def _alert_to_dict(alert: NormalizedAlert) -> dict:
     return {
         "source": alert.source,
@@ -66,14 +110,9 @@ def _alert_to_dict(alert: NormalizedAlert) -> dict:
     }
 
 
-async def _enqueue_investigation(incident_id: str):
-    """
-    Run the investigation directly as a FastAPI background task.
-    No Celery worker required for local dev — the coroutine runs in the
-    same event loop as FastAPI, publishing SSE events to Redis pub/sub.
-    """
-    from app.workers.tasks import _run_investigation
-    await _run_investigation(incident_id)
+def _enqueue_investigation(incident_id: str):
+    from app.workers.tasks import investigate_alert_task
+    investigate_alert_task.delay(incident_id)
 
 
 @router.post("/pagerduty")
@@ -93,20 +132,24 @@ async def pagerduty_webhook(
 
     payload = json.loads(raw_body)
     incident_ids = []
+    correlated_ids = []
 
     for msg in payload.get("messages", [payload]):
-        event_type = msg.get("event", "")  # string e.g. "incident.triggered"
-        if event_type not in ("incident.triggered", "incident.acknowledged", ""):
+        event = msg.get("event", msg)
+        if event.get("event_type", "") not in ("incident.triggered", "incident.acknowledged", ""):
             continue
-        alert = normalize_pagerduty(msg)
-        incident = await _create_incident(db, alert)
-        incident_ids.append(incident.id)
+        alert = normalize_pagerduty(event)
+        incident, is_new = await _get_or_create_incident(db, alert)
+        if is_new:
+            incident_ids.append(incident.id)
+        else:
+            correlated_ids.append(incident.id)
 
     await db.commit()
     for iid in incident_ids:
         background_tasks.add_task(_enqueue_investigation, iid)
 
-    return {"ok": True, "incidents": incident_ids}
+    return {"ok": True, "incidents": incident_ids, "correlated_to": correlated_ids}
 
 
 @router.post("/datadog")
@@ -124,10 +167,19 @@ async def datadog_webhook(
 
     payload = json.loads(raw_body)
     alert = normalize_datadog(payload)
-    incident = await _create_incident(db, alert)
+    incident, is_new = await _get_or_create_incident(db, alert)
     await db.commit()
-    background_tasks.add_task(_enqueue_investigation, incident.id)
-    return {"ok": True, "incident_id": incident.id}
+
+    if is_new:
+        background_tasks.add_task(_enqueue_investigation, incident.id)
+        return {"ok": True, "incident_id": incident.id, "correlated": False}
+
+    return {
+        "ok": True,
+        "incident_id": incident.id,
+        "correlated": True,
+        "message": "Alert correlated to existing incident — no duplicate investigation started",
+    }
 
 
 @router.post("/grafana")
@@ -149,16 +201,20 @@ async def grafana_webhook(
     # Grafana can send multiple alerts in one payload
     alerts_data = payload.get("alerts", [payload])
     incident_ids = []
+    correlated_ids = []
 
     for alert_item in alerts_data:
         single_payload = {**payload, "alerts": [alert_item]}
         alert = normalize_grafana(single_payload)
         if alert.title:
-            incident = await _create_incident(db, alert)
-            incident_ids.append(incident.id)
+            incident, is_new = await _get_or_create_incident(db, alert)
+            if is_new:
+                incident_ids.append(incident.id)
+            else:
+                correlated_ids.append(incident.id)
 
     await db.commit()
     for iid in incident_ids:
         background_tasks.add_task(_enqueue_investigation, iid)
 
-    return {"ok": True, "incidents": incident_ids}
+    return {"ok": True, "incidents": incident_ids, "correlated_to": correlated_ids}

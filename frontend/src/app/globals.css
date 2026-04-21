@@ -2,83 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Theme variables ──────────────────────────────────────────── */
+/* ─── Design tokens (dark-only) ─────────────────────────────────── */
 :root {
-  /* Light mode defaults */
-  --bg-base:    #f0f3fa;
-  --bg-sidebar: #ffffff;
-  --bg-surface: #ffffff;
-  --bg-hover:   #f0f4fb;
-  --bg-deep:    #e8edf8;
-
-  color-scheme: light;
-}
-
-.dark {
-  --bg-base:    #0f0f13;
-  --bg-sidebar: #13131a;
-  --bg-surface: #17171f;
-  --bg-hover:   #1a1a26;
-  --bg-deep:    #0d0d14;
+  --bg-base:    #0c0c10;
+  --bg-sidebar: #10101a;
+  --bg-surface: #14141e;
+  --bg-hover:   #1a1a28;
+  --bg-deep:    #0a0a0f;
 
   color-scheme: dark;
 }
 
-body {
+/* ─── Base ───────────────────────────────────────────────────────── */
+html {
   background: var(--bg-base);
-  font-family: "Inter", system-ui, sans-serif;
 }
 
-/* ─── Light-mode slate color overrides ─────────────────────────── */
-/* In dark mode we use slate-100..700 for text and slate-800 for    */
-/* backgrounds/borders. In light mode we flip the scale so the UI  */
-/* reads correctly without touching every component's class string. */
+body {
+  background: var(--bg-base);
+  color: #e2e8f0; /* slate-200 */
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
 
-html:not(.dark) .text-white       { color: #0f172a; }
-html:not(.dark) .text-slate-100   { color: #0f172a; }
-html:not(.dark) .text-slate-200   { color: #1e293b; }
-html:not(.dark) .text-slate-300   { color: #334155; }
-html:not(.dark) .text-slate-400   { color: #475569; }
-html:not(.dark) .text-slate-500   { color: #64748b; }
-html:not(.dark) .text-slate-600   { color: #94a3b8; }
-html:not(.dark) .text-slate-700   { color: #94a3b8; }
-
-/* Backgrounds */
-html:not(.dark) .bg-slate-800     { background-color: #f1f5f9; }
-html:not(.dark) .bg-slate-900     { background-color: #f8fafc; }
-html:not(.dark) .bg-slate-950     { background-color: #f8fafc; }
-
-/* Opacity variants */
-html:not(.dark) .bg-slate-800\/10 { background-color: rgba(241,245,249,0.10); }
-html:not(.dark) .bg-slate-800\/20 { background-color: rgba(241,245,249,0.80); }
-html:not(.dark) .bg-slate-800\/30 { background-color: rgba(241,245,249,0.60); }
-html:not(.dark) .bg-slate-800\/40 { background-color: rgba(241,245,249,0.50); }
-html:not(.dark) .bg-slate-800\/50 { background-color: rgba(241,245,249,0.90); }
-html:not(.dark) .bg-slate-800\/60 { background-color: #f1f5f9; }
-html:not(.dark) .bg-slate-900\/60 { background-color: rgba(255,255,255,0.90); }
-
-/* Borders */
-html:not(.dark) .border-slate-800      { border-color: #e2e8f0; }
-html:not(.dark) .border-slate-700      { border-color: #cbd5e1; }
-html:not(.dark) .border-slate-600      { border-color: #94a3b8; }
-
-html:not(.dark) .border-slate-800\/50  { border-color: rgba(226,232,240,0.5); }
-html:not(.dark) .border-slate-800\/40  { border-color: rgba(226,232,240,0.4); }
-
-/* Dividers (divide-slate-800) */
-html:not(.dark) .divide-slate-800 > :not([hidden]) ~ :not([hidden]) { border-color: #e2e8f0; }
-
-/* Hover overrides */
-html:not(.dark) .hover\:bg-slate-800:hover { background-color: #f1f5f9; }
-html:not(.dark) .hover\:text-white:hover   { color: #0f172a; }
-
-/* Scrollbar */
-html:not(.dark) .scrollbar-thin { scrollbar-color: #cbd5e1 transparent; }
-
-/* ─── Scrollbar ────────────────────────────────────────────────── */
-.scrollbar-thin {
+/* ─── Custom scrollbar ────────────────────────────────────────────── */
+* {
   scrollbar-width: thin;
-  scrollbar-color: #3f3f5a transparent;
+  scrollbar-color: #2d2d44 transparent;
+}
+*::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: #2d2d44;
+  border-radius: 3px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #3d3d5a;
 }
 
 /* ─── Trace map: animated dashed error edges ───────────────────── */
@@ -89,11 +53,22 @@ html:not(.dark) .scrollbar-thin { scrollbar-color: #cbd5e1 transparent; }
   animation: dashMove 0.6s linear infinite;
 }
 
-/* ─── Smooth theme transition ──────────────────────────────────── */
+/* ─── Smooth surface transitions (no color flicker) ────────────── */
 *, *::before, *::after {
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.12s ease;
+  transition: background-color 0.1s ease, border-color 0.1s ease, opacity 0.1s ease;
 }
-/* Don't animate SVG strokes or animations */
-svg *, .animate-spin, .animate-pulse, .animate-dash, .animate-ping {
+/* Exempt animation classes */
+svg *, .animate-spin, .animate-pulse, .animate-dash, .animate-ping, .animate-bounce {
   transition: none !important;
+}
+
+/* ─── Input / textarea focus ring ────────────────────────────────── */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+}
+
+/* ─── Selection ──────────────────────────────────────────────────── */
+::selection {
+  background: rgba(99, 102, 241, 0.3);
+  color: #e2e8f0;
 }

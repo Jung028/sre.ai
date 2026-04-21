@@ -91,7 +91,6 @@ export default function IncidentDetailPage() {
   }
 
   const hasRca = !!incident.rca;
-  // v2-rca-detail-view
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">

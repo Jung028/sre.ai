@@ -135,30 +135,20 @@ export default function TracePage() {
       )}
 
       {/* ── Main area: map + log panel ── */}
-      <div className="flex flex-1 overflow-hidden mt-3 px-6 lg:px-8 pb-3 gap-3">
+      <div className="flex flex-1 overflow-hidden mt-3 px-6 lg:px-8 pb-5 gap-3">
 
-        {/* Map — fills remaining space */}
-        <div className="flex-1 min-w-0 bg-[var(--bg-deep)] border border-slate-800 rounded-xl overflow-auto relative">
-          {/* Hint overlay (disappears once something selected) */}
-          {!selectedNodeId && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-              <p className="text-[11px] text-slate-600 bg-[var(--bg-surface)] border border-slate-800 rounded-full px-3 py-1 whitespace-nowrap">
-                Click a node for logs · Click an arrow for connection details
-              </p>
-            </div>
-          )}
-          <div className="p-5">
-            <TraceMap
-              trace={trace}
-              selectedNodeId={selectedNodeId}
-              onSelectNode={setSelectedNodeId}
-            />
-          </div>
+        {/* Map — fills remaining space, TraceMap handles pan/zoom internally */}
+        <div className="flex-1 min-w-0 bg-[var(--bg-deep)] border border-slate-800 rounded-xl overflow-hidden relative">
+          <TraceMap
+            trace={trace}
+            selectedNodeId={selectedNodeId}
+            onSelectNode={setSelectedNodeId}
+          />
         </div>
 
-        {/* Log panel — slides in when node selected */}
+        {/* Log panel — ~1/3 width, slides in when node selected */}
         {selectedNodeId && (
-          <div className="w-96 flex-shrink-0 bg-[var(--bg-surface)] border border-slate-800 rounded-xl flex flex-col overflow-hidden">
+          <div className="w-[32%] flex-shrink-0 bg-[var(--bg-surface)] border border-slate-800 rounded-xl flex flex-col overflow-hidden">
             <div className="p-4 flex-1 overflow-hidden flex flex-col">
               <SpanLogPanel
                 trace={trace}
@@ -168,42 +158,6 @@ export default function TracePage() {
             </div>
           </div>
         )}
-      </div>
-
-      {/* ── Service stats bar ── */}
-      <div className="px-6 lg:px-8 pb-4 flex-shrink-0">
-        <div className="grid grid-cols-5 gap-2">
-          {trace.nodes.map((node) => {
-            const nodeSpans    = trace.spans.filter((s) => s.service === node.id);
-            const totalDur     = nodeSpans.reduce((sum, s) => sum + s.durationMs, 0);
-            const isSelected   = selectedNodeId === node.id;
-            const statusBorder = {
-              error: "border-red-500/30 bg-red-500/5",
-              slow:  "border-yellow-500/30 bg-yellow-500/5",
-              ok:    "border-slate-800 bg-slate-800/20",
-            }[node.status];
-
-            return (
-              <button
-                key={node.id}
-                onClick={() => setSelectedNodeId(isSelected ? null : node.id)}
-                className={`text-left border rounded-lg p-2.5 transition-all hover:scale-[1.01] ${statusBorder} ${
-                  isSelected ? "ring-1 ring-indigo-400" : ""
-                }`}
-              >
-                <div className="flex items-center justify-between mb-0.5">
-                  <span className="text-xs font-medium text-slate-200 truncate pr-1">{node.label}</span>
-                  <span className={`text-[10px] font-bold uppercase flex-shrink-0 ${
-                    node.status === "error" ? "text-red-400" : node.status === "slow" ? "text-yellow-400" : "text-green-400"
-                  }`}>{node.status}</span>
-                </div>
-                <p className="text-[10px] text-slate-500">
-                  {nodeSpans.length} span{nodeSpans.length !== 1 ? "s" : ""} · {totalDur}ms
-                </p>
-              </button>
-            );
-          })}
-        </div>
       </div>
     </div>
   );

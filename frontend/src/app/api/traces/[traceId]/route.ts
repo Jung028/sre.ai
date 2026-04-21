@@ -5,7 +5,27 @@ export async function GET(
   _req: Request,
   { params }: { params: { traceId: string } }
 ) {
-  const trace = MOCK_TRACES[params.traceId];
+  const { traceId } = params;
+
+  // Try real backend first
+  try {
+    const apiKey = process.env.NEXT_PUBLIC_API_KEY;
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/api/traces/${traceId}`,
+      {
+        headers: apiKey ? { "X-API-Key": apiKey } : {},
+        cache: "no-store",
+        signal: AbortSignal.timeout(2000),
+      }
+    );
+    if (res.ok) {
+      return NextResponse.json(await res.json());
+    }
+  } catch {
+    // Fall through to mock
+  }
+
+  const trace = MOCK_TRACES[traceId];
   if (!trace) {
     return NextResponse.json({ error: "Trace not found" }, { status: 404 });
   }
