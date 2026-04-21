@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import { ArrowLeft, Check, Copy, GitFork, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { TraceMap } from "@/components/trace/TraceMap";
-import { SpanLogPanel } from "@/components/trace/SpanLogPanel";
 import type { TraceData } from "@/lib/types";
 
 const STATUS_DOT: Record<string, string> = {
@@ -134,30 +133,15 @@ export default function TracePage() {
         </div>
       )}
 
-      {/* ── Main area: map + log panel ── */}
-      <div className="flex flex-1 overflow-hidden mt-3 px-6 lg:px-8 pb-5 gap-3">
-
-        {/* Map — fills remaining space, TraceMap handles pan/zoom internally */}
-        <div className="flex-1 min-w-0 bg-[var(--bg-deep)] border border-slate-800 rounded-xl overflow-hidden relative">
+      {/* ── Main area: full-width map (log panel overlays inside) ── */}
+      <div className="flex-1 overflow-hidden mt-3 px-6 lg:px-8 pb-5">
+        <div className="w-full h-full bg-[var(--bg-deep)] border border-slate-800 rounded-xl overflow-hidden relative">
           <TraceMap
             trace={trace}
             selectedNodeId={selectedNodeId}
             onSelectNode={setSelectedNodeId}
           />
         </div>
-
-        {/* Log panel — ~1/3 width, slides in when node selected */}
-        {selectedNodeId && (
-          <div className="w-[32%] flex-shrink-0 bg-[var(--bg-surface)] border border-slate-800 rounded-xl flex flex-col overflow-hidden">
-            <div className="p-4 flex-1 overflow-hidden flex flex-col">
-              <SpanLogPanel
-                trace={trace}
-                selectedNodeId={selectedNodeId}
-                onClose={() => setSelectedNodeId(null)}
-              />
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

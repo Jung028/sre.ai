@@ -3,6 +3,7 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import { Minus, Plus, RotateCcw, X } from "lucide-react";
 import type { TraceData, TraceNode, TraceEdge } from "@/lib/types";
+import { SpanLogPanel } from "./SpanLogPanel";
 
 const H_STEP  = 220;
 const V_STEP  = 100;
@@ -522,6 +523,25 @@ export function TraceMap({ trace, selectedNodeId, onSelectNode }: Props) {
           clientY={popupPos.y}
           onClose={() => setSelectedEdgeIdx(null)}
         />
+      )}
+
+      {/* ── Node log overlay — floats inside the map on the right ── */}
+      {selectedNodeId && (
+        <div
+          className="absolute top-4 right-4 bottom-4 z-30 flex flex-col bg-[#0f0f18]/95 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl shadow-black/60 overflow-hidden"
+          style={{ width: "clamp(300px, 32%, 420px)" }}
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onWheel={(e) => e.stopPropagation()}
+        >
+          <div className="p-4 flex-1 overflow-hidden flex flex-col">
+            <SpanLogPanel
+              trace={trace}
+              selectedNodeId={selectedNodeId}
+              onClose={() => onSelectNode(null)}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
